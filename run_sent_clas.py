@@ -14,6 +14,9 @@ from tqdm import tqdm, trange
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from transformers import SchedulerType, get_scheduler
 from creat import Trainer, CreATTrainer
+from trainer.freelb import FreeLBTrainer
+from trainer.r3f import R3FTrainer
+from trainer.smart import SMARTTrainer
 
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -98,6 +101,44 @@ class SstProcessor(DataProcessor):
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
+
+
+class IflytekProcessor(DataProcessor):
+    """Processor for the SST-2 data set (GLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def get_test_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+
+    def get_labels(self):
+        return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63', '64', '65', '66', '67', '68', '69', '70', '71', '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110', '111', '112', '113', '114', '115', '116', '117', '118', '119']
+
+
+    @staticmethod
+    def _create_examples(lines, set_type):
+        examples = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            if set_type == "test":
+                text_a = line[-1]
+                label = '0'
+            else:
+                text_a = line[-2]
+                label = line[-1]
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
+        return examples
+
 
 
 class ColaProcessor(DataProcessor):
@@ -343,6 +384,43 @@ class RteProcessor(DataProcessor):
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
+    
+class CmnliProcessor(DataProcessor):
+    """Processor for the CMNLI data set (CLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def get_test_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+
+    def get_labels(self):
+        return ["entailment", "contradiction", "neutral", "-"]
+
+    @staticmethod
+    def _create_examples(lines, set_type):
+        examples = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            if set_type == "test":
+                text_a = line[-2]
+                text_b = line[-1]
+                label = "entailment"
+            else:
+                text_a = line[-3]
+                text_b = line[-2]
+                label = line[-1]
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
 
 
 class StsProcessor(DataProcessor):
@@ -400,6 +478,82 @@ class WnliProcessor(DataProcessor):
 
     def get_labels(self):
         return ['0', '1']
+
+    @staticmethod
+    def _create_examples(lines, set_type):
+        examples = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            if set_type == "test":
+                text_a = line[-2]
+                text_b = line[-1]
+                label = '0'
+            else:
+                text_a = line[-3]
+                text_b = line[-2]
+                label = line[-1]
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+    
+class AfqmcProcessor(DataProcessor):
+    """Processor for the WNLI data set (GLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def get_test_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+
+    def get_labels(self):
+        return ['0', '1']
+
+    @staticmethod
+    def _create_examples(lines, set_type):
+        examples = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            if set_type == "test":
+                text_a = line[-2]
+                text_b = line[-1]
+                label = '0'
+            else:
+                text_a = line[-3]
+                text_b = line[-2]
+                label = line[-1]
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+    
+    
+class TnewsProcessor(DataProcessor):
+    """Processor for the WNLI data set (GLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def get_test_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+
+    def get_labels(self):
+        return ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', 
+                '110', '111', '112', '113', '114', '115', '116'] 
 
     @staticmethod
     def _create_examples(lines, set_type):
@@ -568,6 +722,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
     label_map = {label: i for i, label in enumerate(label_list)}
     features = []
     for i, example in enumerate(examples):
+        # print(i)
         if example.text_b:
             encoded_inputs = tokenizer(example.text_a,
                                        example.text_b,
@@ -635,33 +790,33 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Data config
-    parser.add_argument("--data_dir", type=str, default="../data/glue/",
+    parser.add_argument("--data_dir", type=str, default="./data/clue-roc/",
                         help="Directory to contain the input data for all tasks.")
-    parser.add_argument("--task_name", type=str, default="SST-2",
+    parser.add_argument("--task_name", type=str, default="tnews",
                         help="Name of the training task.")
-    parser.add_argument("--load_model_path", type=str, default="bert-base-uncased",
+    parser.add_argument("--load_model_path", type=str, default="model/bert-base-chinese",
                         help="Pre-trained language model to load.")
-    parser.add_argument("--cache_dir", type=str, default="../cache/",
+    parser.add_argument("--cache_dir", type=str, default="../cache/base",
                         help="Directory to store the pre-trained language models downloaded from s3.")
-    parser.add_argument("--output_dir", type=str, default="model/",
+    parser.add_argument("--output_dir", type=str, default="model/freelb",
                         help="Directory to output predictions and checkpoints.")
-    parser.add_argument("--load_state_dict", type=str, default="",
+    parser.add_argument("--load_state_dict", type=str, default="bert-base-creat/pytorch_model.bin",
                         help="Trained model weights to load for evaluation.")
 
     # Training config
-    parser.add_argument("--do_train", action="store_true",
+    parser.add_argument("--do_train", action="store_true", default=True,
                         help="Whether to run training.")
-    parser.add_argument("--do_eval", action="store_true",
+    parser.add_argument("--do_eval", action="store_true", default=True,
                         help="Whether to evaluate on the dev set.")
-    parser.add_argument("--do_test", action="store_true",
+    parser.add_argument("--do_test", action="store_true", default=False,
                         help="Whether to evaluate on the test set.")
     parser.add_argument("--do_lower_case", action="store_true",
                         help="Set this flag if you are using an uncased model.")
     parser.add_argument("--max_seq_length", type=int, default=128,
                         help="Maximum total input sequence length after word-piece tokenization.")
-    parser.add_argument("--train_batch_size", type=int, default=32,
+    parser.add_argument("--train_batch_size", type=int, default=64,
                         help="Total batch size for training.")
-    parser.add_argument("--eval_batch_size", type=int, default=128,
+    parser.add_argument("--eval_batch_size", type=int, default=64,
                         help="Total batch size for evaluation.")
     parser.add_argument("--learning_rate", type=float, default=3e-5,
                         help="Peak learning rate for optimization.")
@@ -683,7 +838,7 @@ def main():
                         help="Whether to use mixed precision.")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for initialization.")
-    parser.add_argument("--creat", action="store_true",
+    parser.add_argument("--method", type=str, default="r3f",
                         help="To do CreAT if passed.")
     parser.add_argument("--adv_steps", type=int, default=2,
                         help="Inner ascent steps for AT.")
@@ -693,6 +848,8 @@ def main():
                         help="Decision boundary for AT.")
     parser.add_argument("--adv_temp", type=float, default=1.0,
                         help="Temperature coefficient for AT.")
+    parser.add_argument("--device", type=str, default='cuda:0',
+                        help="Whether not to use CUDA when available.")
 
     args = parser.parse_args()
 
@@ -710,10 +867,15 @@ def main():
         "anli": AnliProcessor,
         "paws-qqp": PawsqqpProcessor,
         "paws-wiki": PawswikiProcessor,
+        "cmnli": CmnliProcessor,
+        "afqmc": AfqmcProcessor,
+        "tnews": TnewsProcessor,
+        "iflytek": IflytekProcessor,
     }
 
-    device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-    n_gpu = torch.cuda.device_count()
+    device = torch.device(args.device if torch.cuda.is_available() and not args.no_cuda else "cpu")
+    # n_gpu = torch.cuda.device_count()
+    n_gpu = 1
     logger.info("device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
         device, n_gpu, "Unsupported", args.fp16))
 
@@ -767,7 +929,8 @@ def main():
 
         model = AutoModelForSequenceClassification.from_pretrained(args.load_model_path,
                                                                    num_labels=num_labels,
-                                                                   cache_dir=cache_dir)
+                                                                   cache_dir=cache_dir,
+                                                                   ignore_mismatched_sizes=True)
         model.to(device)
         if n_gpu > 1:
             model = torch.nn.DataParallel(model)
@@ -808,9 +971,15 @@ def main():
         logger.info("  Batch size = %d", args.train_batch_size)
         logger.info("  Num steps = %d", args.max_train_steps)
 
-        if args.creat:
+        if args.method == "creat":
             trainer = CreATTrainer(model, optimizer, scheduler, args.max_train_steps, args.gradient_accumulation_steps, args.fp16,
                                    args.adv_steps, args.adv_lr, args.adv_max_norm, args.adv_temp)
+        elif args.method == "freelb":
+            trainer = FreeLBTrainer(model, optimizer, scheduler, args.max_train_steps, args.gradient_accumulation_steps, args.fp16)
+        elif args.method == "r3f":
+            trainer = R3FTrainer(model, optimizer, scheduler, args.max_train_steps, args.gradient_accumulation_steps, args.fp16)
+        elif args.method == "smart":
+            trainer = SMARTTrainer(model, optimizer, scheduler, args.max_train_steps, args.gradient_accumulation_steps, args.fp16)
         else:
             trainer = Trainer(model, optimizer, scheduler, args.max_train_steps, args.gradient_accumulation_steps, args.fp16)
 
@@ -918,6 +1087,7 @@ def main():
         logger.info("***** Running test *****")
         logger.info("  Num examples = %d", len(eval_examples))
         logger.info("  Batch size = %d", args.eval_batch_size)
+        # print(args.load_model_path)
         predict_model = AutoModelForSequenceClassification.from_pretrained(args.load_model_path,
                                                                            state_dict=torch.load(args.load_state_dict),
                                                                            num_labels=num_labels,
